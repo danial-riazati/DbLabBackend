@@ -90,8 +90,13 @@ builder.Services.AddControllers();
 builder.Services.AddDistributedMemoryCache();
 
 builder.Services.AddScoped<IListRepo, ListRepo>();
+builder.Services.AddHttpClient();
 
-
+builder.Services.AddCors(options =>
+  {
+      options.AddPolicy("CORSPolicy", builder => builder.AllowAnyMethod().AllowAnyHeader().AllowCredentials().SetIsOriginAllowed((hosts) => true));
+  }
+  );
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(20);
@@ -112,6 +117,11 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+    app.UseCors(x => x
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .SetIsOriginAllowed(origin => true)
+                    .AllowCredentials());
 
 app.UseHttpsRedirection();
 

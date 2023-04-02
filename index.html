@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>API Example</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <h1>List of Strings</h1>
+    <ul id="string-list"></ul>
+
+    <h2>Add a New String</h2>
+    <input type="text" id="new-string-input">
+    <button id="add-string-button">Add String</button>
+
+    <script>
+        $(document).ready(function () {
+            // Fetch the list of strings from the API
+            $.ajax({
+                url: "https://localhost:7049/api/List/getlist",
+                type: "GET",
+                success: function (response) {
+                    console.log(response)
+                    // Display each string in the UI
+                    response.value.forEach(function (item) {
+                        $("#string-list").append("<li class='string' id='" + item.id + "'>" + item.value + "    <button id='" + item.id + "' class='remove-button'>Remove</button>   <button id='" + item.id + "' class='edit-button'>Edit</button> </li>");
+                    });
+                }
+            });
+
+            // Add a new string when the user clicks the "Add String" button
+            $("#add-string-button").click(function () {
+                var newString = $("#new-string-input").val();
+                $.ajax({
+                    url: "https://localhost:7049/api/List/additem",
+                    type: "POST",
+                    contentType:'application/json',
+                    data: JSON.stringify({ value: newString }),
+                    success: function (response) {
+                        console.log(response)
+                        // Add the new string to the UI
+                        $("#string-list").append("<li class='string' id='" + response.value.id + "'>" + response.value.value + "    <button id='" + response.value.id + "' class='remove-button'>Remove</button>   <button id='" + response.value.id + "' class='edit-button'>Edit</button> </li>");
+                    }
+                });
+            });
+
+            // Update a string when the user clicks on it
+            $(document).on("click", ".edit-button", function() {
+                var stringId = $(this).attr("id");
+                var newString = prompt("Enter a new value for the string:", $(this).text());
+                $.ajax({
+                    url: "https://localhost:7049/api/List/updateitem/",
+                    type: "POST",
+                    contentType:'application/json',
+                    data: JSON.stringify({ id: stringId, newValue: newString }),
+                    success: function (response) {
+                        // Update the string in the UI
+                        $("#" + stringId).text(newString);
+                        location.reload(true);
+
+                    }
+                });
+            });
+
+            // View the history of a string when the user right-clicks on it
+            $(document).on("contextmenu", ".string", function () {
+                var stringId = $(this).attr("id");
+                $.ajax({
+                    url: "https://localhost:7049/api/List/gethistory/" + stringId ,
+                    type: "GET",
+                    success: function (response) {
+                        // Display the history in an alert
+                        var historyString = "";
+                        response.value.forEach(function (historyItem) {
+                            historyString += historyItem.date + ": " + historyItem.value + "\n";
+                        });
+                        alert(historyString);
+                    }
+                });
+                return false; // Prevent the default context menu from appearing
+            });
+
+            // Remove a string when the user double-clicks on it
+            $(document).on("click", ".remove-button", function() {
+                var stringId = $(this).attr("id");
+                $.ajax({
+                    url: "https://localhost:7049/api/List/removeitem/" + stringId,
+                    type: "POST",
+                    contentType:'application/json',
+                    success: function () {
+                        // Remove the string from the UI
+                        $("#" + stringId).remove();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -19,7 +19,7 @@ namespace DbLabBackend.Repos
 
             await _context.SaveChangesAsync();
 
-            return Results.Ok();
+            return Results.Ok(item);
         }
 
         public async Task<IResult> GetHistory(int id)
@@ -28,13 +28,14 @@ namespace DbLabBackend.Repos
                            where i.Item.Id == id
                            orderby i.Date
                            select i).ToList();
-            
+
             return Results.Ok(history);
         }
 
         public async Task<IResult> GetList()
         {
             var items = (from i in _context.Items
+                         where i.isRemoved == false
                          select i).ToList();
 
             if (items.Count == 0)
